@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Messenger App
 
-## Getting Started
+Ứng dụng chat real-time xây dựng với **Next.js App Router**, **Prisma**, **MongoDB**, **Pusher**, **NextAuth**, **Cloudinary** và **Tailwind CSS v4**.
 
-First, run the development server:
+## Tính năng
+- Chat 1-1 và nhóm real-time
+- Hiển thị trạng thái online/offline (presence)
+- Hiển thị đã xem/chưa xem tin nhắn
+- Đăng nhập xác thực (NextAuth)
+- Cập nhật hồ sơ & avatar (Cloudinary upload)
+- Giao diện responsive (hỗ trợ mobile & desktop)
 
+## Công nghệ sử dụng
+- [Next.js 15+ App Router](https://nextjs.org/)
+- [Prisma ORM](https://www.prisma.io/) + MongoDB
+- [Pusher Channels](https://pusher.com/channels) (real-time)
+- [NextAuth.js](https://next-auth.js.org/) (xác thực)
+- [Cloudinary](https://cloudinary.com/) (upload ảnh)
+- [Tailwind CSS v4](https://tailwindcss.com/)
+
+## Hướng dẫn cài đặt
+
+### 1. Cài đặt package
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Tạo file môi trường `.env`
+Tạo file `.env` ở thư mục gốc với nội dung mẫu:
+```env
+DATABASE_URL="mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/<db>?retryWrites=true&w=majority"
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_nextauth_secret
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+PUSHER_APP_ID=your_pusher_app_id
+NEXT_PUBLIC_PUSHER_APP_KEY=your_key
+PUSHER_SECRET=your_secret
+PUSHER_CLUSTER= ...
+NEXT_PUBLIC_PUSHER_CLUSTER= ...
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_key
+CLOUDINARY_API_SECRET=your_cloudinary_secret
+```
 
-## Learn More
+### 3. Khởi tạo Prisma
+```bash
+npx prisma generate
+npx prisma db push
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 4. Chạy server phát triển
+```bash
+npm run dev
+```
+Truy cập [http://localhost:3000](http://localhost:3000)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Lưu ý
+- **Pusher**: Đảm bảo app key, secret, cluster đúng và đã bật presence channel.
+- **Cloudinary**: Đảm bảo upload preset `chat-app` đã được tạo và cho phép unsigned upload.
+- **Tailwind v4**: Đã cấu hình content đúng cho thư mục `app/`.
+- **NextAuth**: Đã cấu hình provider phù hợp (email, Google, ...).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts
+- `npm run dev` — Chạy server phát triển
+- `npm run build` — Build production
+- `npm start` — Chạy production
 
-## Deploy on Vercel
+## 📸 Screenshots
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Login
+<img src="/public/images/login.png" width="100%" alt="login">
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Friend
+<img src="/public/images/friend.png" width="100%" alt="friend">
+
+### Chat
+<img src="/public/images/chat.png" width="100%" alt="chat">
+
+### Group chat
+<img src="/public/images/groupchat1.png" width="100%" alt="groupchat1">
+<img src="/public/images/groupchat2.png" width="100%" alt="groupchat2">
+<img src="/public/images/detail.png" width="100%" alt="detail">
+
+### Profile
+<img src="/public/images/profile.png" width="100%" alt="profile">
+
+
+## License
+MIT
