@@ -9,6 +9,9 @@ import { HiChevronLeft, HiEllipsisHorizontal } from "react-icons/hi2";
 import ProfileDrawer from "./ProfileDrawer";
 import AvatarGroup from "@/app/components/AvatarGroup";
 import useActiveList from "@/app/hooks/useActiveList";
+import CallButton from "@/app/components/calls/CallButton";
+import IncomingCallModal from "@/app/components/calls/IncomingCallModal";
+import useCall from "@/app/hooks/useCall";
 
 
 interface HeaderProps {
@@ -25,6 +28,9 @@ const Header: React.FC<HeaderProps> = ({
     const [drawerOpen, setDrawerOpen] = useState(false);
     const { members } = useActiveList();
     const isActive = !!otherUser?.email && members.includes(otherUser.email);
+    
+    // Call management
+    const { incomingCall, setIncomingCall } = useCall(conversation.id);
 
     const statusText = useMemo(() => {
         if (conversation.isGroup) {
@@ -60,8 +66,30 @@ const Header: React.FC<HeaderProps> = ({
                         </div>
                     </div>
                 </div>
-                <HiEllipsisHorizontal size={32} onClick={() => setDrawerOpen(true)} className="text-sky-500 cursor-pointer hover:text-sky-600 transition" />
+                
+                {/* Call Buttons */}
+                <div className="flex items-center gap-2">
+                    <CallButton 
+                        conversationId={conversation.id} 
+                        type="voice" 
+                    />
+                    <CallButton 
+                        conversationId={conversation.id} 
+                        type="video" 
+                    />
+                    <HiEllipsisHorizontal 
+                        size={32} 
+                        onClick={() => setDrawerOpen(true)} 
+                        className="text-sky-500 cursor-pointer hover:text-sky-600 transition" 
+                    />
+                </div>
             </div>
+            
+            {/* Incoming Call Modal */}
+            <IncomingCallModal 
+                call={incomingCall}
+                onClose={() => setIncomingCall(null)}
+            />
         </>
     )
 }

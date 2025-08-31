@@ -31,6 +31,10 @@ model User {
 
   accounts Account[]
   messages Message[]
+  
+  // Call relations
+  callsAsCaller Call[] @relation("Caller")
+  callParticipants CallParticipant[]
 }
 
 model Account {
@@ -63,6 +67,9 @@ model Conversation {
 
   userIds String[] @db.ObjectId
   users User[] @relation(fields: [userIds], references: [id])
+  
+  // Call relation
+  calls Call[]
 }
 
 model Message {
@@ -79,5 +86,67 @@ model Message {
 
   senderId String @db.ObjectId
   sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
 
+// New Call Models
+model Call {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  roomName String @unique // LiveKit room identifier
+  type CallType
+  status CallStatus
+  duration Int? // Duration in seconds
+  startedAt DateTime @default(now())
+  endedAt DateTime?
+  
+  // Relations
+  conversationId String @db.ObjectId
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  
+  callerId String @db.ObjectId
+  caller User @relation("Caller", fields: [callerId], references: [id])
+  
+  participants CallParticipant[]
+  
+  // Indexes
+  @@index([conversationId])
+  @@index([callerId])
+  @@index([status])
+}
+
+model CallParticipant {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  user User @relation(fields: [userId], references: [id])
+  
+  callId String @db.ObjectId
+  call Call @relation(fields: [callId], references: [id])
+  
+  joinedAt DateTime @default(now())
+  leftAt DateTime?
+  role ParticipantRole
+  
+  // Unique constraint
+  @@unique([userId, callId])
+  @@index([callId])
+  @@index([userId])
+}
+
+// Enums
+enum CallType {
+  VIDEO
+  VOICE
+}
+
+enum CallStatus {
+  INCOMING    // Call created, waiting for answer
+  ONGOING     // Call accepted, in progress
+  ENDED       // Call ended normally
+  MISSED      // Call not answered
+  REJECTED    // Call rejected by receiver
+  CANCELLED   // Call cancelled by caller
+}
+
+enum ParticipantRole {
+  CALLER
+  RECEIVER
 }
