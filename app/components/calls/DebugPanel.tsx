@@ -10,7 +10,7 @@ interface DebugPanelProps {
 
 const DebugPanel: React.FC<DebugPanelProps> = ({ conversationId }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [debugInfo, setDebugInfo] = useState<Record<string, unknown> | null>(null);
 
   const checkActiveCalls = async () => {
     setIsLoading(true);

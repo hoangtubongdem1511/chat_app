@@ -20,7 +20,7 @@ const getCurrentUser = async () => {
         }
 
         return currentUser;
-    } catch (error: any) {
+    } catch {
         return null;
     }
 }

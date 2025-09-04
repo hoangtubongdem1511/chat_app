@@ -22,6 +22,20 @@ const IncomingCallModal: React.FC<IncomingCallModalProps> = ({
   const [timeLeft, setTimeLeft] = useState(30); // 30 seconds timeout
   const router = useRouter();
   
+  const handleReject = async () => {
+    if (!call) return;
+    
+    try {
+      await axios.post(`/api/calls/${call.id}/reject`);
+      toast.success('Call rejected');
+    } catch (error: unknown) {
+      console.error('Reject call failed:', error);
+      toast.error('Failed to reject call');
+    } finally {
+      onClose();
+    }
+  };
+  
   // Auto-close after 30 seconds
   useEffect(() => {
     if (call) {
@@ -37,7 +51,7 @@ const IncomingCallModal: React.FC<IncomingCallModalProps> = ({
       
       return () => clearInterval(timer);
     }
-  }, [call]);
+  }, [call, handleReject]);
   
   const handleAccept = async () => {
     if (!call) return;
@@ -54,10 +68,12 @@ const IncomingCallModal: React.FC<IncomingCallModalProps> = ({
       router.push(`/calls/${call.id}`);
       
       toast.success('Call accepted');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Accept call failed:', error);
       
-      if (error.response?.status === 400) {
+      if (error && typeof error === 'object' && 'response' in error && 
+          error.response && typeof error.response === 'object' && 'status' in error.response &&
+          error.response.status === 400) {
         toast.error('Call is no longer available');
       } else {
         toast.error('Failed to accept call. Please try again.');
@@ -66,20 +82,6 @@ const IncomingCallModal: React.FC<IncomingCallModalProps> = ({
       onClose();
     } finally {
       setIsLoading(false);
-    }
-  };
-  
-  const handleReject = async () => {
-    if (!call) return;
-    
-    try {
-      await axios.post(`/api/calls/${call.id}/reject`);
-      toast.success('Call rejected');
-    } catch (error: any) {
-      console.error('Reject call failed:', error);
-      toast.error('Failed to reject call');
-    } finally {
-      onClose();
     }
   };
   
@@ -92,7 +94,7 @@ const IncomingCallModal: React.FC<IncomingCallModalProps> = ({
       <div className="text-center p-8 max-w-sm mx-auto bg-white rounded-lg">
         {/* Caller Avatar */}
         <div className="mb-6">
-          <Avatar user={call.caller as any} />
+          <Avatar user={call.caller} />
         </div>
         
         {/* Call Info */}

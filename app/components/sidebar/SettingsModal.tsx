@@ -44,8 +44,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
     const image = watch('image');
 
-    const handleUpload = (result: any) => {
-        setValue('image', result?.info?.secure_url, {
+    const handleUpload = (result: unknown) => {
+        const url = result && typeof result === 'object' && 'info' in result && 
+                   result.info && typeof result.info === 'object' && 'secure_url' in result.info
+                   ? (result.info as { secure_url?: string }).secure_url
+                   : undefined;
+        setValue('image', url, {
             shouldValidate: true
         });
     }

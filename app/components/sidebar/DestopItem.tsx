@@ -4,7 +4,7 @@ import clsx from "clsx";
 
 interface DesktopItemProps {
     label: string;
-    icon: any;
+    icon: React.ComponentType<{ className?: string }>;
     href: string;
     onClick?: () => void;
     active?: boolean;

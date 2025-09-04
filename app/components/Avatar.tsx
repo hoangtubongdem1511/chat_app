@@ -5,7 +5,7 @@ import Image from "next/image";
 import useActiveList from "../hooks/useActiveList";
 
 interface AvatarProps {
-    user: User;
+    user: Pick<User, 'image' | 'email'>;
 }
 
 const Avatar: React.FC<AvatarProps> = ({ 
