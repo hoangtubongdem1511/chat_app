@@ -85,7 +85,6 @@ const CallPage = async ({ params }: CallPageProps) => {
    return (
      <VideoCallInterface
        callId={callId}
-       roomName={call.roomName}
        token={token}
      />
    );
