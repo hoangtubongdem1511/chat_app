@@ -6,6 +6,7 @@ import {
   VideoConference,
   useRoomContext,
 } from '@livekit/components-react';
+import { RoomEvent } from 'livekit-client';
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -104,7 +105,36 @@ const RoomStateBinder = () => {
 
   useEffect(() => {
     if (!room) return;
-    // Room is now available for any future use
+    // Attach debug listeners for camera publish failures & media device errors
+    const onLocalTrackPublished = () => {
+      console.log('[LiveKit] Local track published');
+    };
+    const onMediaDevicesError = (error: unknown) => {
+      console.error('[LiveKit] Media devices error:', error);
+    };
+
+    room.on(RoomEvent.LocalTrackPublished, onLocalTrackPublished);
+    room.on(RoomEvent.MediaDevicesError, onMediaDevicesError);
+
+    // Optional: log camera permission state if supported
+    try {
+      const permissions: unknown = (navigator as unknown as { permissions?: unknown }).permissions;
+      if (permissions && typeof permissions === 'object') {
+        const perms = permissions as { query?: (arg: unknown) => Promise<unknown> };
+        if (typeof perms.query === 'function') {
+          perms.query({ name: 'camera' as unknown }).then((p: unknown) => {
+          if (p && typeof p === 'object' && 'state' in p) {
+            console.log('[Permissions] camera:', (p as { state?: string }).state);
+          }
+          }).catch(() => {});
+        }
+      }
+    } catch {}
+
+    return () => {
+      room.off(RoomEvent.LocalTrackPublished, onLocalTrackPublished);
+      room.off(RoomEvent.MediaDevicesError, onMediaDevicesError);
+    };
   }, [room]);
 
   return null;
