@@ -88,14 +88,10 @@ export async function POST(request: Request) {
       }
     });
     
-    // Notify other users in conversation
-    conversation.users.forEach((user) => {
-      if (user.id !== currentUser.id && user.email) {
-        pusherServer.trigger(user.email, 'call:incoming', {
-          ...call,
-          conversation: call.conversation
-        });
-      }
+    // Notify all users in this conversation via conversation channel
+    pusherServer.trigger(call.conversation.id, 'call:incoming', {
+      ...call,
+      conversation: call.conversation
     });
     
     return NextResponse.json(call);

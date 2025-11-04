@@ -78,12 +78,8 @@ export async function POST(
       }
     });
     
-    // Notify all participants about call rejection
-    call.conversation.users.forEach((user) => {
-      if (user.email) {
-        pusherServer.trigger(user.email, 'call:rejected', updatedCall);
-      }
-    });
+    // Notify all participants about call rejection via conversation channel
+    pusherServer.trigger(updatedCall.conversation.id, 'call:rejected', updatedCall);
     
     return NextResponse.json(updatedCall);
   } catch (error) {

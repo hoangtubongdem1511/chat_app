@@ -93,12 +93,8 @@ export async function POST(
       }
     });
     
-    // Notify all participants about call acceptance
-    call.conversation.users.forEach((user) => {
-      if (user.email) {
-        pusherServer.trigger(user.email, 'call:accepted', updatedCall);
-      }
-    });
+    // Notify all participants about call acceptance via conversation channel
+    pusherServer.trigger(updatedCall.conversation.id, 'call:accepted', updatedCall);
     
     return NextResponse.json(updatedCall);
   } catch (error) {
