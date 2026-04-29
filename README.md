@@ -22,15 +22,29 @@
 - [Cloudinary](https://cloudinary.com/) - Image upload & management
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 
+## Cấu trúc dự án
+
+```
+messenger-app/
+  frontend/       # Next.js App Router (React UI)
+  backend/        # NestJS API
+  package.json    # Root orchestration scripts
+```
+
 ## Hướng dẫn cài đặt
 
 ### 1. Cài đặt package
+
 ```bash
-npm install
+# Frontend
+cd frontend && npm install
+
+# Backend
+cd backend && npm install
 ```
 
 ### 2. Tạo file môi trường `.env`
-Tạo file `.env` ở thư mục gốc với nội dung mẫu:
+Tạo file `frontend/.env` với nội dung mẫu:
 ```env
 # Database
 DATABASE_URL="mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/<db>?retryWrites=true&w=majority"
@@ -59,13 +73,16 @@ NEXT_PUBLIC_LIVEKIT_URL=wss://your-livekit-server.livekit.cloud
 
 ### 3. Khởi tạo Prisma
 ```bash
+cd frontend
 npx prisma generate
 npx prisma db push
 ```
 
 ### 4. Chạy server phát triển
 ```bash
-npm run dev
+# Từ thư mục gốc:
+npm run dev          # Frontend (Next.js)
+npm run backend:dev  # Backend (NestJS)
 ```
 Truy cập [http://localhost:3000](http://localhost:3000)
 
@@ -77,34 +94,36 @@ Truy cập [http://localhost:3000](http://localhost:3000)
 - **Tailwind**: Đã cấu hình content đúng cho thư mục `app/`.
 - **NextAuth**: Đã cấu hình provider phù hợp (email, Google, GitHub).
 
-## Scripts
-- `npm run dev` — Chạy server phát triển
-- `npm run build` — Build production
-- `npm start` — Chạy production
+## Scripts (chạy từ thư mục gốc)
+- `npm run dev` — Chạy frontend (Next.js) phát triển
+- `npm run build` — Build frontend production
+- `npm start` — Chạy frontend production
+- `npm run backend:dev` — Chạy backend (NestJS) phát triển
+- `npm run backend:build` — Build backend production
 
 ## 📸 Screenshots
 
 ### Login
-<img src="/public/images/login.png" width="100%" alt="login">
+<img src="/frontend/public/images/login.png" width="100%" alt="login">
 
 ### Friend
-<img src="/public/images/friend.png" width="100%" alt="friend">
+<img src="/frontend/public/images/friend.png" width="100%" alt="friend">
 
 ### Chat
-<img src="/public/images/chat.png" width="100%" alt="chat">
+<img src="/frontend/public/images/chat.png" width="100%" alt="chat">
 
 ### Group chat
-<img src="/public/images/groupchat1.png" width="100%" alt="groupchat1">
-<img src="/public/images/groupchat2.png" width="100%" alt="groupchat2">
-<img src="/public/images/detail.png" width="100%" alt="detail">
+<img src="/frontend/public/images/groupchat1.png" width="100%" alt="groupchat1">
+<img src="/frontend/public/images/groupchat2.png" width="100%" alt="groupchat2">
+<img src="/frontend/public/images/detail.png" width="100%" alt="detail">
 
 ### Profile
-<img src="/public/images/profile.png" width="100%" alt="profile">
+<img src="/frontend/public/images/profile.png" width="100%" alt="profile">
 
 ### Call
-<img src="/public/images/call1.png" width="100%" alt="call1">
-<img src="/public/images/call2.png" width="100%" alt="call2">
-<img src="/public/images/call3.png" width="100%" alt="call3">
+<img src="/frontend/public/images/call1.png" width="100%" alt="call1">
+<img src="/frontend/public/images/call2.png" width="100%" alt="call2">
+<img src="/frontend/public/images/call3.png" width="100%" alt="call3">
 
 
 ## License
