@@ -2,12 +2,13 @@
 
 import useConversation from "@/app/hooks/useConversation";
 import { FullMessageType } from "@/app/types";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import MessageBox from "./MessageBox";
 import apiClient from "@/app/lib/api-client";
 import getSocket from "@/app/libs/socket";
-import { find } from "lodash";
 import { useTyping } from "@/app/hooks/useTyping";
+import useMessagesStore from "@/app/hooks/useMessagesStore";
+import { useJwtAuth } from "@/app/context/JwtAuthContext";
 
 interface BodyProps {
     initialMessages: FullMessageType[];
@@ -16,10 +17,20 @@ interface BodyProps {
 const Body: React.FC<BodyProps> = ({ 
     initialMessages 
 }) => {
-    const [messages, setMessages] = useState(initialMessages);
     const bottomRef = useRef<HTMLDivElement>(null);
     const { conversationId } = useConversation();
     const { typingUserIds } = useTyping(conversationId);
+    const { user } = useJwtAuth();
+    const { byConversationId, setInitial, applyServer } = useMessagesStore();
+
+    const messages = useMemo(() => {
+        return byConversationId[conversationId] ?? initialMessages;
+    }, [byConversationId, conversationId, initialMessages]);
+
+    useEffect(() => {
+        if (!conversationId) return;
+        setInitial(conversationId, initialMessages);
+    }, [conversationId, initialMessages, setInitial]);
     
     useEffect(() => {
         apiClient.post(`/conversations/${conversationId}/seen`);
@@ -32,24 +43,17 @@ const Body: React.FC<BodyProps> = ({
         bottomRef?.current?.scrollIntoView();
 
         const messageHandler = (message: FullMessageType) => {
-            apiClient.post(`/conversations/${conversationId}/seen`);
-            setMessages((current) => {
-                if (find(current, { id: message.id })) {
-                    return current;
-                }
-                return [...current, message];
-            });
+            if (message.senderId !== user?.id) {
+                apiClient.post(`/conversations/${conversationId}/seen`);
+            }
+
+            applyServer(conversationId, message, message.clientId);
 
             bottomRef?.current?.scrollIntoView();
         };
 
         const updateMessageHandler = (newMessage: FullMessageType) => {
-            setMessages((current) => current.map((currentMessage) => {
-                if (currentMessage.id === newMessage.id) {
-                    return newMessage;
-                }
-                return currentMessage;
-            }));
+            applyServer(conversationId, newMessage, newMessage.clientId);
         };
 
         socket.on('messages:new', messageHandler);
@@ -60,7 +64,7 @@ const Body: React.FC<BodyProps> = ({
             socket.off('messages:new', messageHandler);
             socket.off('message:update', updateMessageHandler);
         };
-    }, [conversationId]);
+    }, [conversationId, applyServer, user?.id]);
 
     return (
         <div className="flex-1 overflow-y-auto">

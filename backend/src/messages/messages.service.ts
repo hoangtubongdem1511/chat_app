@@ -1,10 +1,12 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { AuthenticatedUser } from '../common/types/authenticated-user.type';
 
 @Injectable()
 export class MessagesService {
+  private readonly logger = new Logger(MessagesService.name);
+
   constructor(
     private prisma: PrismaService,
     private realtime: RealtimeService,
@@ -31,9 +33,22 @@ export class MessagesService {
   }
 
   async create(
-    currentUser: any,
-    body: { message?: string; image?: string; conversationId: string },
+    currentUser: AuthenticatedUser,
+    body: { message?: string; image?: string; conversationId: string; clientId?: string },
   ) {
+    const conversation = await this.prisma.conversation.findUnique({
+      where: { id: body.conversationId },
+      select: { userIds: true },
+    });
+
+    if (!conversation) {
+      throw new NotFoundException('Conversation not found');
+    }
+
+    if (!conversation.userIds.includes(currentUser.id)) {
+      throw new ForbiddenException('Not authorized for this conversation');
+    }
+
     const newMessage = await this.prisma.message.create({
       data: {
         body: body.message,
@@ -46,30 +61,28 @@ export class MessagesService {
       include: { seen: true, sender: true },
     });
 
-    const updatedConversation = await this.prisma.conversation.update({
-      where: { id: body.conversationId },
-      data: {
-        lastMessageAt: new Date(),
-        messages: { connect: { id: newMessage.id } },
-      },
-      include: {
-        users: true,
-        messages: { include: { seen: true } },
-      },
-    });
+    const payload = { ...newMessage, clientId: body.clientId };
 
-    this.realtime.emitToConversation(body.conversationId, 'messages:new', newMessage);
+    // Don't gate the broadcast or HTTP response on this.
+    void this.prisma.conversation
+      .update({
+        where: { id: body.conversationId },
+        data: {
+          lastMessageAt: newMessage.createdAt,
+        },
+        select: { id: true },
+      })
+      .catch((e) => this.logger.error('lastMessageAt bump failed', e));
 
-    const lastMessage =
-      updatedConversation.messages[updatedConversation.messages.length - 1];
+    this.realtime.emitToConversation(body.conversationId, 'messages:new', payload);
 
-    updatedConversation.users.forEach((user) => {
-      this.realtime.emitToUser(user.id, 'conversation:update', {
+    conversation.userIds.forEach((userId) => {
+      this.realtime.emitToUser(userId, 'conversation:update', {
         id: body.conversationId,
-        messages: [lastMessage],
+        messages: [newMessage],
       });
     });
 
-    return newMessage;
+    return payload;
   }
 }

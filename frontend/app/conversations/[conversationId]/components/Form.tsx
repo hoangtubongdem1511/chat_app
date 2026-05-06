@@ -7,6 +7,9 @@ import { HiPaperAirplane, HiPhoto } from "react-icons/hi2";
 import MessageInput from "./MessageInput";
 import { CldUploadButton } from "next-cloudinary";
 import { useTyping } from "@/app/hooks/useTyping";
+import useMessagesStore from "@/app/hooks/useMessagesStore";
+import { useJwtAuth } from "@/app/context/JwtAuthContext";
+import { FullMessageType } from "@/app/types";
 
 const Form = () => {
     const { conversationId } = useConversation();
@@ -16,21 +19,72 @@ const Form = () => {
         }
     });
     const { startTyping, stopTyping } = useTyping(conversationId);
+    const { user } = useJwtAuth();
+    const { addOptimistic, markFailed, applyServer } = useMessagesStore();
+
+    const makeOptimisticMessage = (data: { body?: string; image?: string; clientId: string }): FullMessageType => {
+        const now = new Date();
+        const sender = (user ?? { id: 'unknown', email: 'unknown', name: null, image: null }) as unknown as FullMessageType['sender'];
+        const seen = (user ? [user] : []) as unknown as FullMessageType['seen'];
+        return {
+            id: data.clientId,
+            body: data.body,
+            image: data.image,
+            conversationId,
+            senderId: user?.id ?? 'unknown',
+            seenIds: user?.id ? [user.id] : [],
+            createdAt: now,
+            sender,
+            seen,
+            clientId: data.clientId,
+            pending: true,
+            failed: false,
+        } as unknown as FullMessageType;
+    };
 
     const onSubmit: SubmitHandler<FieldValues> = (data) => {
+        const clientId = crypto.randomUUID();
+        const devLabel = process.env.NODE_ENV !== 'production' ? `send->paint:${clientId}` : null;
+        if (devLabel) console.time(devLabel);
         stopTyping();
         setValue("message", "", { shouldValidate: true });
+        addOptimistic(conversationId, makeOptimisticMessage({ body: data.message, clientId }));
+        if (devLabel) {
+            requestAnimationFrame(() => console.timeEnd(devLabel));
+        }
+
         apiClient.post("/messages", {
             ...data,
-            conversationId: conversationId
+            conversationId: conversationId,
+            clientId,
+        }).then((res) => {
+            applyServer(conversationId, res.data, clientId);
+        }).catch(() => {
+            markFailed(conversationId, clientId);
         });
     };
 
     const handleUpload = (result: unknown) => {
         const uploadResult = result as { info?: { secure_url?: string } };
+        const image = uploadResult?.info?.secure_url;
+        if (!image) return;
+
+        const clientId = crypto.randomUUID();
+        const devLabel = process.env.NODE_ENV !== 'production' ? `send->paint:${clientId}` : null;
+        if (devLabel) console.time(devLabel);
+        addOptimistic(conversationId, makeOptimisticMessage({ image, clientId }));
+        if (devLabel) {
+            requestAnimationFrame(() => console.timeEnd(devLabel));
+        }
+
         apiClient.post("/messages", {
-            image: uploadResult?.info?.secure_url,
-            conversationId
+            image,
+            conversationId,
+            clientId,
+        }).then((res) => {
+            applyServer(conversationId, res.data, clientId);
+        }).catch(() => {
+            markFailed(conversationId, clientId);
         });
     };
 

@@ -3,11 +3,24 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { MessagesService } from './messages.service';
 import { AuthenticatedUser } from '../common/types/authenticated-user.type';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-interface CreateMessageBody {
-  conversationId: string;
+class CreateMessageDto {
+  @IsString()
+  @IsNotEmpty()
+  conversationId!: string;
+
+  @IsOptional()
+  @IsString()
   message?: string;
+
+  @IsOptional()
+  @IsString()
   image?: string;
+
+  @IsOptional()
+  @IsString()
+  clientId?: string;
 }
 
 @UseGuards(JwtAuthGuard)
@@ -24,7 +37,7 @@ export class MessagesController {
   }
 
   @Post()
-  create(@CurrentUser() user: AuthenticatedUser, @Body() body: CreateMessageBody) {
+  create(@CurrentUser() user: AuthenticatedUser, @Body() body: CreateMessageDto) {
     return this.messagesService.create(user, body);
   }
 }
