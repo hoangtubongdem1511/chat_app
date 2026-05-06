@@ -6,13 +6,13 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PusherService } from '../pusher/pusher.service';
+import { RealtimeService } from '../realtime/realtime.service';
 
 @Injectable()
 export class CallsService {
   constructor(
     private prisma: PrismaService,
-    private pusher: PusherService,
+    private realtime: RealtimeService,
   ) {}
 
   async create(currentUser: any, body: { conversationId: string; type: string }) {
@@ -75,8 +75,8 @@ export class CallsService {
     });
 
     conversation.users.forEach((user) => {
-      if (user.id !== currentUser.id && user.email) {
-        this.pusher.trigger(user.email, 'call:incoming', {
+      if (user.id !== currentUser.id) {
+        this.realtime.emitToUser(user.id, 'call:incoming', {
           ...call,
           conversation: call.conversation,
         });
@@ -183,9 +183,7 @@ export class CallsService {
     });
 
     call.conversation.users.forEach((user) => {
-      if (user.email) {
-        this.pusher.trigger(user.email, 'call:accepted', updatedCall);
-      }
+      this.realtime.emitToUser(user.id, 'call:accepted', updatedCall);
     });
 
     return updatedCall;
@@ -228,9 +226,7 @@ export class CallsService {
     });
 
     call.conversation.users.forEach((user) => {
-      if (user.email) {
-        this.pusher.trigger(user.email, 'call:rejected', updatedCall);
-      }
+      this.realtime.emitToUser(user.id, 'call:rejected', updatedCall);
     });
 
     return updatedCall;
@@ -289,9 +285,7 @@ export class CallsService {
     });
 
     call.conversation.users.forEach((user) => {
-      if (user.email) {
-        this.pusher.trigger(user.email, 'call:ended', updatedCall);
-      }
+      this.realtime.emitToUser(user.id, 'call:ended', updatedCall);
     });
 
     return updatedCall;

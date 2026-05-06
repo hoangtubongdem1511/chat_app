@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import apiClient from '@/app/lib/api-client';
+import { connectSocket, disconnectSocket } from '@/app/libs/socket';
 
 interface AuthUser {
   id: string;
@@ -47,6 +48,7 @@ export function JwtAuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await apiClient.get<AuthUser>('/auth/me');
       setState({ user: res.data, token: stored, status: 'authenticated' });
+      connectSocket();
     } catch {
       localStorage.removeItem('auth_token');
       setState({ user: null, token: null, status: 'unauthenticated' });
@@ -76,6 +78,7 @@ export function JwtAuthProvider({ children }: { children: React.ReactNode }) {
     });
     persistToken(res.data.accessToken);
     setState({ user: res.data.user, token: res.data.accessToken, status: 'authenticated' });
+    connectSocket();
   };
 
   const register = async (name: string, email: string, password: string) => {
@@ -86,6 +89,7 @@ export function JwtAuthProvider({ children }: { children: React.ReactNode }) {
     });
     persistToken(res.data.accessToken);
     setState({ user: res.data.user, token: res.data.accessToken, status: 'authenticated' });
+    connectSocket();
   };
 
   const loginOAuth = (provider: 'google' | 'github') => {
@@ -99,6 +103,7 @@ export function JwtAuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // best-effort
     }
+    disconnectSocket();
     localStorage.removeItem('auth_token');
     document.cookie = 'auth_token=; path=/; max-age=0; samesite=lax';
     setState({ user: null, token: null, status: 'unauthenticated' });

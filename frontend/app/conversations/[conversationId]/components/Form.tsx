@@ -6,6 +6,7 @@ import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { HiPaperAirplane, HiPhoto } from "react-icons/hi2";
 import MessageInput from "./MessageInput";
 import { CldUploadButton } from "next-cloudinary";
+import { useTyping } from "@/app/hooks/useTyping";
 
 const Form = () => {
     const { conversationId } = useConversation();
@@ -14,22 +15,24 @@ const Form = () => {
             message: ""
         }
     });
+    const { startTyping, stopTyping } = useTyping(conversationId);
 
     const onSubmit: SubmitHandler<FieldValues> = (data) => {
+        stopTyping();
         setValue("message", "", { shouldValidate: true });
         apiClient.post("/messages", {
             ...data,
             conversationId: conversationId
-        })
-    }
+        });
+    };
 
     const handleUpload = (result: unknown) => {
         const uploadResult = result as { info?: { secure_url?: string } };
         apiClient.post("/messages", {
             image: uploadResult?.info?.secure_url,
             conversationId
-        })
-    }
+        });
+    };
 
     return (
         <div className="py-4 px-4 bg-white border-t flex items-center gap-2 lg:gap-4 w-full">
@@ -43,13 +46,15 @@ const Form = () => {
                     errors={errors}
                     required
                     placeholder="Write a message"
+                    onTyping={startTyping}
+                    onBlur={stopTyping}
                 />
                 <button type="submit" className="rounded-full p-2 bg-sky-500 cursor-pointer hover:bg-sky-600 transition">
                     <HiPaperAirplane size={18} className="text-white" />
                 </button>
             </form>
         </div>
-    )
-}
+    );
+};
 
 export default Form;

@@ -1,13 +1,13 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PusherService } from '../pusher/pusher.service';
+import { RealtimeService } from '../realtime/realtime.service';
 import { AuthenticatedUser } from '../common/types/authenticated-user.type';
 
 @Injectable()
 export class MessagesService {
   constructor(
     private prisma: PrismaService,
-    private pusher: PusherService,
+    private realtime: RealtimeService,
   ) {}
 
   async getByConversation(conversationId: string, currentUser: AuthenticatedUser) {
@@ -58,21 +58,17 @@ export class MessagesService {
       },
     });
 
-    await this.pusher.trigger(body.conversationId, 'messages:new', newMessage);
+    this.realtime.emitToConversation(body.conversationId, 'messages:new', newMessage);
 
     const lastMessage =
       updatedConversation.messages[updatedConversation.messages.length - 1];
 
-    await Promise.all(
-      updatedConversation.users
-        .filter((user) => user.email)
-        .map((user) =>
-          this.pusher.trigger(user.email!, 'conversation:update', {
-            id: body.conversationId,
-            messages: [lastMessage],
-          }),
-        ),
-    );
+    updatedConversation.users.forEach((user) => {
+      this.realtime.emitToUser(user.id, 'conversation:update', {
+        id: body.conversationId,
+        messages: [lastMessage],
+      });
+    });
 
     return newMessage;
   }

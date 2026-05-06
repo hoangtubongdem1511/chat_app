@@ -66,7 +66,7 @@ export interface LiveKitTokenResponse {
   token: string;
 }
 
-// Pusher event types
+// Realtime event types
 export interface CallIncomingEvent {
   id: string;
   roomName: string;

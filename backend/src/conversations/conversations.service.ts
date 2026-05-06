@@ -6,13 +6,13 @@ import {
 } from '@nestjs/common';
 import { AuthenticatedUser } from '../common/types/authenticated-user.type';
 import { PrismaService } from '../prisma/prisma.service';
-import { PusherService } from '../pusher/pusher.service';
+import { RealtimeService } from '../realtime/realtime.service';
 
 @Injectable()
 export class ConversationsService {
   constructor(
     private prisma: PrismaService,
-    private pusher: PusherService,
+    private realtime: RealtimeService,
   ) {}
 
   async getAll(userId: string) {
@@ -71,9 +71,7 @@ export class ConversationsService {
       });
 
       newConversation.users.forEach((user) => {
-        if (user.email) {
-          this.pusher.trigger(user.email, 'conversation:new', newConversation);
-        }
+        this.realtime.emitToUser(user.id, 'conversation:new', newConversation);
       });
 
       return newConversation;
@@ -102,11 +100,9 @@ export class ConversationsService {
       include: { users: true },
     });
 
-    await Promise.all(
-      newConversation.users
-        .filter((user) => user.email)
-        .map((user) => this.pusher.trigger(user.email!, 'conversation:new', newConversation)),
-    );
+    newConversation.users.forEach((user) => {
+      this.realtime.emitToUser(user.id, 'conversation:new', newConversation);
+    });
 
     return newConversation;
   }
@@ -129,11 +125,9 @@ export class ConversationsService {
       where: { id: conversationId },
     });
 
-    await Promise.all(
-      existing.users
-        .filter((user) => user.email)
-        .map((user) => this.pusher.trigger(user.email!, 'conversation:remove', existing)),
-    );
+    existing.users.forEach((user) => {
+      this.realtime.emitToUser(user.id, 'conversation:remove', existing);
+    });
 
     return deleted;
   }
@@ -161,7 +155,7 @@ export class ConversationsService {
       return conversation;
     }
 
-    // Idempotency guard: skip DB write and Pusher if already seen
+    // Idempotency guard: skip DB write and realtime emit if already seen
     if (lastMessage.seenIds.includes(currentUser.id)) {
       return conversation;
     }
@@ -174,13 +168,11 @@ export class ConversationsService {
       },
     });
 
-    await Promise.all([
-      this.pusher.trigger(currentUser.email!, 'conversation:update', {
-        id: conversationId,
-        messages: [updatedMessage],
-      }),
-      this.pusher.trigger(conversationId, 'message:update', updatedMessage),
-    ]);
+    this.realtime.emitToUser(currentUser.id, 'conversation:update', {
+      id: conversationId,
+      messages: [updatedMessage],
+    });
+    this.realtime.emitToConversation(conversationId, 'message:update', updatedMessage);
 
     return updatedMessage;
   }

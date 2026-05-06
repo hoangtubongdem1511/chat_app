@@ -6,7 +6,7 @@ import { UsersModule } from './users/users.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { MessagesModule } from './messages/messages.module';
 import { CallsModule } from './calls/calls.module';
-import { PusherModule } from './pusher/pusher.module';
+import { RealtimeModule } from './realtime/realtime.module';
 import { LiveKitModule } from './livekit/livekit.module';
 
 @Module({
@@ -18,7 +18,7 @@ import { LiveKitModule } from './livekit/livekit.module';
     ConversationsModule,
     MessagesModule,
     CallsModule,
-    PusherModule,
+    RealtimeModule,
     LiveKitModule,
   ],
 })

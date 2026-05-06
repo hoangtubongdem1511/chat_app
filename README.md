@@ -1,9 +1,9 @@
 # Messenger App
 
-Ứng dụng chat real-time xây dựng với **Next.js App Router**, **Prisma**, **MongoDB**, **Pusher**, **NextAuth**, **Cloudinary**, **LiveKit.io** và **Tailwind CSS**.
+Ứng dụng chat real-time xây dựng với **Next.js App Router**, **Prisma**, **MongoDB**, **Socket.io**, **NextAuth**, **Cloudinary**, **LiveKit.io** và **Tailwind CSS**.
 
 ## Tính năng
-- **Chat 1-1 và nhóm real-time** với Pusher Channels
+- **Chat 1-1 và nhóm real-time** với Socket.io WebSocket
 - **Video call chất lượng cao** với LiveKit.io (WebRTC)
 - **Hiển thị trạng thái online/offline** (presence)
 - **Hiển thị đã xem/chưa xem tin nhắn** real-time
@@ -16,7 +16,7 @@
 ## Công nghệ sử dụng
 - [Next.js 15+ App Router](https://nextjs.org/) - Framework React
 - [Prisma ORM](https://www.prisma.io/) + MongoDB - Database
-- [Pusher Channels](https://pusher.com/channels) - Real-time messaging & notifications
+- [Socket.io](https://socket.io/) - Real-time WebSocket messaging & notifications (self-hosted)
 - [LiveKit.io](https://livekit.io/) - WebRTC video/audio calls
 - [NextAuth.js](https://next-auth.js.org/) - Authentication
 - [Cloudinary](https://cloudinary.com/) - Image upload & management
@@ -53,13 +53,6 @@ DATABASE_URL="mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/<db>?retryWrites
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your_nextauth_secret
 
-# Pusher (Real-time messaging)
-PUSHER_APP_ID=your_pusher_app_id
-NEXT_PUBLIC_PUSHER_APP_KEY=your_key
-PUSHER_SECRET=your_secret
-PUSHER_CLUSTER=your_cluster
-NEXT_PUBLIC_PUSHER_CLUSTER=your_cluster
-
 # Cloudinary (Image upload)
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_cloudinary_key
@@ -88,7 +81,7 @@ Truy cập [http://localhost:3000](http://localhost:3000)
 
 
 ## Lưu ý
-- **Pusher**: Đảm bảo app key, secret, cluster đúng và đã bật presence channel.
+- **Socket.io**: Real-time được xử lý tự hoàn toàn bởi NestJS backend — không cần dịch vụ bên ngoài. Backend phải chạy trước khi mở frontend.
 - **Cloudinary**: Đảm bảo upload preset `chat-app` đã được tạo và cho phép unsigned upload.
 - **LiveKit**: Cần tạo tài khoản LiveKit.io và lấy API key/secret.
 - **Tailwind**: Đã cấu hình content đúng cho thư mục `app/`.
