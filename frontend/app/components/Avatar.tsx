@@ -5,15 +5,14 @@ import Image from "next/image";
 import useActiveList from "../hooks/useActiveList";
 
 interface AvatarProps {
-    user: Pick<User, 'image' | 'email'>;
+    user: Pick<User, 'id' | 'image'>;
 }
 
 const Avatar: React.FC<AvatarProps> = ({ 
     user 
 }) => {
     const { members } = useActiveList();
-    const isActive = !!user?.email && members.includes(user.email);
-    console.log('Avatar debug:', { userEmail: user?.email, members, isActive });
+    const isActive = !!user?.id && members.includes(user.id);
     return (
         <div className="relative">
             <div className="relative inline-block rounded-full overflow-hidden h-9 w-9 md:h-11 md:w-11">

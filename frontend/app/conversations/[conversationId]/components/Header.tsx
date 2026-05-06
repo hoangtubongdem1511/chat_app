@@ -5,6 +5,7 @@ import useOtherUser from "@/app/hooks/useOtherUser";
 import { Conversation, User } from "@prisma/client";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { formatDistanceToNow } from "date-fns";
 import { HiChevronLeft, HiEllipsisHorizontal } from "react-icons/hi2";
 import ProfileDrawer from "./ProfileDrawer";
 import AvatarGroup from "@/app/components/AvatarGroup";
@@ -26,8 +27,17 @@ const Header: React.FC<HeaderProps> = ({
     const otherUser = useOtherUser(conversation);
 
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const { members } = useActiveList();
-    const isActive = !!otherUser?.email && members.includes(otherUser.email);
+    const { members, lastSeenByUserId } = useActiveList();
+    const isActive = !!otherUser?.id && members.includes(otherUser.id);
+
+    const lastSeenIso = useMemo(() => {
+        if (!otherUser?.id) return undefined;
+        const fromSocket = lastSeenByUserId[otherUser.id];
+        if (fromSocket) return fromSocket;
+        const ls = otherUser.lastSeenAt;
+        if (ls == null) return undefined;
+        return typeof ls === "string" ? ls : new Date(ls).toISOString();
+    }, [otherUser?.id, otherUser?.lastSeenAt, lastSeenByUserId]);
     
     // Call management
     const { incomingCall, setIncomingCall } = useCall(conversation.id);
@@ -37,8 +47,18 @@ const Header: React.FC<HeaderProps> = ({
             return `${conversation.users.length} members`;
         }
 
-        return isActive ? "Active" : "Offline";
-    }, [conversation, isActive]);
+        if (isActive) return "Active";
+
+        if (lastSeenIso) {
+            try {
+                return `Last seen ${formatDistanceToNow(new Date(lastSeenIso), { addSuffix: true })}`;
+            } catch {
+                return "Offline";
+            }
+        }
+
+        return "Offline";
+    }, [conversation.isGroup, conversation.users.length, isActive, lastSeenIso]);
 
     return (
         <>

@@ -3,7 +3,7 @@ import getSocket from '../libs/socket';
 import useActiveList from './useActiveList';
 
 const usePresence = () => {
-  const { set, add, remove } = useActiveList();
+  const { set, add, remove, setLastSeen } = useActiveList();
 
   useEffect(() => {
     const socket = getSocket();
@@ -16,8 +16,11 @@ const usePresence = () => {
       add(userId);
     };
 
-    const onOffline = ({ userId }: { userId: string }) => {
+    const onOffline = ({ userId, lastSeenAt }: { userId: string; lastSeenAt?: string }) => {
       remove(userId);
+      if (lastSeenAt) {
+        setLastSeen(userId, lastSeenAt);
+      }
     };
 
     socket.on('presence:list', onList);
@@ -29,7 +32,7 @@ const usePresence = () => {
       socket.off('presence:online', onOnline);
       socket.off('presence:offline', onOffline);
     };
-  }, [set, add, remove]);
+  }, [set, add, remove, setLastSeen]);
 };
 
 export default usePresence;

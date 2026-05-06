@@ -91,13 +91,21 @@ export class RealtimeGateway
     }
   }
 
-  handleDisconnect(socket: Socket) {
+  async handleDisconnect(socket: Socket) {
     const s = socket as AuthenticatedSocket;
     if (!s.data?.userId) return;
 
     const wentOffline = this.presence.remove(s.data.userId, socket.id);
     if (wentOffline) {
-      socket.broadcast.emit('presence:offline', { userId: s.data.userId });
+      const lastSeenAt = new Date();
+      await this.prisma.user.update({
+        where: { id: s.data.userId },
+        data: { lastSeenAt },
+      });
+      socket.broadcast.emit('presence:offline', {
+        userId: s.data.userId,
+        lastSeenAt: lastSeenAt.toISOString(),
+      });
     }
 
     this.logger.log(`Socket ${socket.id} disconnected — user ${s.data.userId}`);

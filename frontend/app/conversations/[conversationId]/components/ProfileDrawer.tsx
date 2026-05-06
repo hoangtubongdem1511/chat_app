@@ -4,7 +4,7 @@ import useOtherUser from "@/app/hooks/useOtherUser";
 import { Conversation, User } from "@prisma/client";
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useMemo, useState } from "react";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { IoClose, IoTrash } from "react-icons/io5";
 import Avatar from "@/app/components/Avatar";
 import ConfirmModal from "./ConfirmModal";
@@ -26,9 +26,18 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({
 }) => {
     const otherUser = useOtherUser(data);
     const [confirmOpen, setConfirmOpen] = useState(false);
-    const { members } = useActiveList();
+    const { members, lastSeenByUserId } = useActiveList();
 
-    const isActive = !!otherUser?.email && members.includes(otherUser.email);
+    const isActive = !!otherUser?.id && members.includes(otherUser.id);
+
+    const lastSeenIso = useMemo(() => {
+        if (!otherUser?.id) return undefined;
+        const fromSocket = lastSeenByUserId[otherUser.id];
+        if (fromSocket) return fromSocket;
+        const ls = otherUser.lastSeenAt;
+        if (ls == null) return undefined;
+        return typeof ls === "string" ? ls : new Date(ls).toISOString();
+    }, [otherUser?.id, otherUser?.lastSeenAt, lastSeenByUserId]);
 
     const joinedDate = useMemo(() => {
         return format(new Date(otherUser.createdAt), "PP");
@@ -42,8 +51,16 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({
         if (data.isGroup) {
             return `${data.users.length} members`;
         }
-        return isActive ? "Active" : "Offline";
-    }, [data, isActive]);
+        if (isActive) return "Active";
+        if (lastSeenIso) {
+            try {
+                return `Last seen ${formatDistanceToNow(new Date(lastSeenIso), { addSuffix: true })}`;
+            } catch {
+                return "Offline";
+            }
+        }
+        return "Offline";
+    }, [data.isGroup, data.users.length, isActive, lastSeenIso]);
 
     return (
         <>

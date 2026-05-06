@@ -47,6 +47,9 @@ const prismaMock = {
       return Promise.resolve(null);
     }),
   },
+  user: {
+    update: jest.fn().mockResolvedValue({}),
+  },
 };
 
 function waitFor<T = unknown>(socket: ClientSocket, event: string, timeoutMs = 2000): Promise<T> {
@@ -130,6 +133,7 @@ describe('RealtimeGateway (e2e)', () => {
 
   afterEach(() => {
     prismaMock.conversation.findUnique.mockClear();
+    prismaMock.user.update.mockClear();
   });
 
   // ---------------------------------------------------------------- handshake
@@ -174,6 +178,8 @@ describe('RealtimeGateway (e2e)', () => {
 
   describe('presence', () => {
     it('broadcasts presence:online when a new user connects, and presence:offline when last socket leaves', async () => {
+      prismaMock.user.update.mockClear();
+
       const a = connect(port, tokenA);
       await waitFor(a, 'presence:list');
 
@@ -184,15 +190,34 @@ describe('RealtimeGateway (e2e)', () => {
       expect((await onlineEvent).userId).toBe(USER_B);
 
       // B disconnects — A should see presence:offline for B.
-      const offlineEvent = waitFor<{ userId: string }>(a, 'presence:offline');
+      const offlineEvent = waitFor<{ userId: string; lastSeenAt: string }>(a, 'presence:offline');
       b.close();
-      expect((await offlineEvent).userId).toBe(USER_B);
+      const offlinePayload = await offlineEvent;
+      expect(offlinePayload.userId).toBe(USER_B);
+      expect(offlinePayload.lastSeenAt).toBeDefined();
+      expect(Number.isNaN(new Date(offlinePayload.lastSeenAt).getTime())).toBe(false);
+      expect(prismaMock.user.update).toHaveBeenCalledTimes(1);
+      expect(prismaMock.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: USER_B },
+          data: expect.objectContaining({ lastSeenAt: expect.any(Date) }),
+        }),
+      );
 
       a.close();
-      await new Promise((r) => setTimeout(r, 50));
+      await new Promise((r) => setTimeout(r, 100));
+      expect(prismaMock.user.update).toHaveBeenCalledTimes(2);
+      expect(prismaMock.user.update).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          where: { id: USER_A },
+          data: expect.objectContaining({ lastSeenAt: expect.any(Date) }),
+        }),
+      );
     });
 
     it('does NOT emit presence:online twice when the same user opens a second tab', async () => {
+      prismaMock.user.update.mockClear();
+
       const observer = connect(port, tokenA);
       await waitFor(observer, 'presence:list');
 
@@ -208,11 +233,16 @@ describe('RealtimeGateway (e2e)', () => {
       // First tab closes — still online via second tab — so NO offline either.
       tab1.close();
       await neverFires(observer, 'presence:offline', 250);
+      expect(prismaMock.user.update).not.toHaveBeenCalled();
 
       // Second tab closes — now we should see presence:offline.
-      const offline = waitFor<{ userId: string }>(observer, 'presence:offline');
+      const offline = waitFor<{ userId: string; lastSeenAt: string }>(observer, 'presence:offline');
       secondTab.close();
-      expect((await offline).userId).toBe(USER_B);
+      const offlinePayload = await offline;
+      expect(offlinePayload.userId).toBe(USER_B);
+      expect(offlinePayload.lastSeenAt).toBeDefined();
+      expect(Number.isNaN(new Date(offlinePayload.lastSeenAt).getTime())).toBe(false);
+      expect(prismaMock.user.update).toHaveBeenCalledTimes(1);
 
       observer.close();
       await new Promise((r) => setTimeout(r, 50));
