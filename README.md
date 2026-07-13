@@ -119,5 +119,3 @@ Truy cập [http://localhost:3000](http://localhost:3000)
 <img src="/frontend/public/images/call3.png" width="100%" alt="call3">
 
 
-## License
-MIT
