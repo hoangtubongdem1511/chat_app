@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { FullConversationType } from "../types";
-import { User } from "@/app/types/user";
+import { User } from "@/app/types";
 import { useJwtAuth } from "../context/JwtAuthContext";
 
 const useOtherUser = (conversation: FullConversationType | {

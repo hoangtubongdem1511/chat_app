@@ -7,7 +7,7 @@ import clsx from "clsx";
 import { MdOutlineGroupAdd } from "react-icons/md";
 import ConversationBox from "./ConversationBox";
 import GroupChatModal from "./GroupChatModal";
-import { User } from "@/app/types/user";
+import { User } from "@/app/types";
 import getSocket from "@/app/libs/socket";
 import { find } from "lodash";
 import { useRouter } from "next/navigation";

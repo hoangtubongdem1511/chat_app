@@ -1,6 +1,6 @@
 'use client';
 
-import { User } from "@/app/types/user";
+import { User } from "@/app/types";
 import Modal from "../Modal";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

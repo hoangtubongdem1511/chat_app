@@ -1,5 +1,5 @@
 import { serverGet } from '@/app/lib/server-api-client';
-import { User } from '../types/user';
+import { User } from '@/app/types';
 
 const getCurrentUser = async (): Promise<User | null> => {
     try {

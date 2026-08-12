@@ -1,6 +1,6 @@
 'use client';
 
-import { User } from "@/app/types/user";
+import { User } from "@/app/types";
 import apiClient from "@/app/lib/api-client";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
