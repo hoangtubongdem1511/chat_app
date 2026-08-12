@@ -1,7 +1,7 @@
 'use client';
 
 import useOtherUser from "@/app/hooks/useOtherUser";
-import { Conversation, User } from "@prisma/client";
+import { Conversation, User } from "@/app/types";
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useMemo, useState } from "react";
 import { format, formatDistanceToNow } from "date-fns";
