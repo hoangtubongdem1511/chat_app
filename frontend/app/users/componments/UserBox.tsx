@@ -1,6 +1,6 @@
 'use client';
 
-import { User } from "@prisma/client";
+import { User } from "@/app/types/user";
 import apiClient from "@/app/lib/api-client";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";

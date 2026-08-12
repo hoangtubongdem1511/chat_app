@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import VideoCallInterface from "@/app/components/calls/VideoCallInterface";
 import { serverGet, serverPost } from "@/app/lib/server-api-client";
-import { User } from "@prisma/client";
+import { User } from "@/app/types/user";
 
 interface CallParticipant {
   user: User;

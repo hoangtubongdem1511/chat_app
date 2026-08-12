@@ -3,7 +3,7 @@
 import useRoutes from "@/app/hooks/useRoutes";
 import { useState } from "react";
 import DesktopItem from "./DestopItem";
-import { User } from "@prisma/client";
+import { User } from "@/app/types/user";
 import Avatar from "../Avatar";
 import SettingsModal from "./SettingsModal";
 

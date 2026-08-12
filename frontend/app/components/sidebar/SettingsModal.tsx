@@ -1,6 +1,6 @@
 'use client';
 
-import { User } from "@prisma/client";
+import { User } from "@/app/types/user";
 import Modal from "../Modal";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
