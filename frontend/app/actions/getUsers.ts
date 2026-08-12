@@ -1,5 +1,5 @@
 import { serverGet } from '@/app/lib/server-api-client';
-import { User } from '@prisma/client';
+import { User } from '../types/user';
 
 const getUsers = async (): Promise<User[]> => {
     try {
