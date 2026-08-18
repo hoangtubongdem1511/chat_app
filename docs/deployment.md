@@ -16,9 +16,12 @@ Recommended configuration:
 - App Service Plan: Basic or higher (WebSockets / Socket.io reliability improves with non-free SKUs)
 
 ### Configure App Service build & start
+The GitHub Actions workflow builds the backend in CI and deploys a pre-built package. Oryx must **not** rebuild on the server (it would fail because dev tools like `@nestjs/cli` are not included in the production package).
+
 In the Web App **Configuration**:
-- **Application settings**:
-  - `SCM_DO_BUILD_DURING_DEPLOYMENT=true` (lets Oryx build on deploy)
+- **Application settings** (the deploy workflow sets these automatically; verify they exist):
+  - `SCM_DO_BUILD_DURING_DEPLOYMENT=false`
+  - `ENABLE_ORYX_BUILD=false`
   - `NODE_ENV=production`
 - **General settings**:
   - **Startup Command**: `npm run start`

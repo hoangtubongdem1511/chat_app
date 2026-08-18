@@ -109,8 +109,21 @@ jobs:
           mkdir -p deploy
           cp -r dist deploy/
           cp -r node_modules deploy/
-          cp package.json deploy/
           cp package-lock.json deploy/
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            delete pkg.devDependencies;
+            delete pkg.scripts.build;
+            delete pkg.scripts['start:dev'];
+            delete pkg.scripts['start:debug'];
+            delete pkg.scripts.lint;
+            delete pkg.scripts.test;
+            delete pkg.scripts['test:e2e'];
+            delete pkg.jest;
+            fs.writeFileSync('deploy/package.json', JSON.stringify(pkg, null, 2));
+          "
+          printf '%s\n' '[config]' 'SCM_DO_BUILD_DURING_DEPLOYMENT = false' > deploy/.deployment
 
       - name: Azure login (OIDC)
         uses: azure/login@v2
@@ -119,6 +132,16 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Disable Oryx build on App Service
+        run: |
+          az webapp config appsettings set \
+            --name "${{ secrets.AZURE_WEBAPP_NAME }}" \
+            --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
+            --settings \
+              SCM_DO_BUILD_DURING_DEPLOYMENT=false \
+              ENABLE_ORYX_BUILD=false \
+              WEBSITE_RUN_FROM_PACKAGE=0
+
       - name: Deploy to Azure Web App
         id: deploy
         uses: azure/webapps-deploy@v3
@@ -126,8 +149,7 @@ jobs:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
           resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP }}
           package: backend/deploy
-        env:
-          SCM_DO_BUILD_DURING_DEPLOYMENT: false
+          startup-command: npm run start
 
   deploy_frontend:
     name: Deploy frontend (Vercel)
