@@ -101,8 +101,16 @@ jobs:
       - name: Build backend
         run: npm run build
 
-      - name: Remove devDependencies
-        run: npm prune --production
+      - name: Install production dependencies only
+        run: npm install --production --legacy-peer-deps
+
+      - name: Prepare deployment package
+        run: |
+          mkdir -p deploy
+          cp -r dist deploy/
+          cp -r node_modules deploy/
+          cp package.json deploy/
+          cp package-lock.json deploy/
 
       - name: Azure login (OIDC)
         uses: azure/login@v2
@@ -117,9 +125,7 @@ jobs:
         with:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
           resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP }}
-          package: backend
-        env:
-          SCM_DO_BUILD_DURING_DEPLOYMENT: false
+          package: backend/deploy
 
   deploy_frontend:
     name: Deploy frontend (Vercel)
