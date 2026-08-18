@@ -126,6 +126,8 @@ jobs:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
           resource-group-name: ${{ secrets.AZURE_RESOURCE_GROUP }}
           package: backend/deploy
+          env:
+            SCM_DO_BUILD_DURING_DEPLOYMENT: false
 
   deploy_frontend:
     name: Deploy frontend (Vercel)
